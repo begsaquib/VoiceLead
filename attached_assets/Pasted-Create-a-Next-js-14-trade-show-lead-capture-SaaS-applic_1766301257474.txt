@@ -1,0 +1,82 @@
+Create a Next.js 14 trade show lead capture SaaS application called "VoiceLead" with the following structure:
+
+PROJECT STRUCTURE:
+- Use Next.js 14 with App Router and TypeScript
+- Use Tailwind CSS for styling
+- No additional dependencies needed
+
+PAGES & FEATURES:
+
+1. LANDING PAGE (/)
+- Modern SaaS style inspired by Stripe
+- Hero section with blue gradient background (from-blue-500 to-purple-600)
+- Large headline: "Capture Trade Show Leads in Seconds"
+- Subheadline: "Voice-powered lead capture that's 10x faster than typing. No expensive badge scanners needed."
+- Problem section explaining why badge scanners are expensive ($800+ vs $99)
+- How it works section (3 steps with icons: Speak → AI Extracts → Save)
+- Pricing table (Starter $99, Pro $299, Enterprise custom)
+- Fake testimonials section (3-4 testimonials with avatars, names, companies)
+- Footer with links (Product, Pricing, About, Contact)
+- Call-to-action button: "Try It Free →" that navigates to /app
+- Make it very stylish, modern, and eye-catching with smooth animations
+
+2. APP PAGE (/app)
+- Two tabs at the top: "Capture Lead" and "Dashboard" 
+- Tab switching component with underline animation
+- Booth name displayed: "WeCommit Booth"
+
+TAB 1 - CAPTURE LEAD:
+- Centered large microphone icon/button (animated, pulsing)
+- Button text: "Click to Capture Lead"
+- On click: Show mock editable card immediately (no real recording)
+- Card displays extracted fields:
+  * Name (text input)
+  * Email (email input)
+  * Company (text input)
+  * Phone (tel input, optional)
+  * Interest (textarea)
+- Two buttons: "Cancel" and "Save Lead"
+- On Save: Add to mock dashboard data, show success message, reset form
+- Card should be beautiful with shadow, rounded corners, smooth animations
+
+TAB 2 - DASHBOARD:
+- If no leads: Show empty state "No leads captured yet at WeCommit Booth"
+- If leads exist: Show grid layout (3 columns) of lead cards
+- Each card should display:
+  * Avatar circle with initials
+  * Name (bold)
+  * Email (with email icon)
+  * Company (with building icon)
+  * Phone (if exists, with phone icon)
+  * Interest badge/tag
+  * Subtle hover effect with shadow
+- Export button at top right: "Export to Excel" that downloads CSV file
+- Cards should be clean, modern, with good spacing
+
+MOCK DATA:
+- Create 4-5 diverse fake leads for dashboard:
+  * Lead 1: Sarah Johnson, sarah@techcorp.com, TechCorp, interested in API automation
+  * Lead 2: Michael Chen, michael@startup.io, StartupIO, interested in CRM integration
+  * Lead 3: Emma Williams, emma@enterprise.com, Enterprise Co, interested in workflow tools
+  * Lead 4: James Brown, james@innovation.ai, Innovation AI, interested in lead capture
+- When user saves new lead in Capture tab, add it to this list
+
+STYLING REQUIREMENTS:
+- Use Tailwind CSS exclusively
+- Modern, clean, professional design
+- Smooth transitions and hover effects
+- Responsive design (mobile-friendly)
+- Use icons from Tailwind or emoji (🎤, 📧, 🏢, 📱, ✨)
+- Color scheme: Blue primary (#3B82F6), purple accents (#8B5CF6)
+- Beautiful shadows and rounded corners throughout
+- Proper spacing and typography hierarchy
+
+FUNCTIONALITY:
+- All API calls should be mocked (no real backend)
+- State management with React useState
+- When saving lead, simulate 1 second loading state
+- Export button should generate and download real CSV file with all leads
+- Form validation (name, email, company required)
+- Smooth page transitions
+
+Make it production-ready, beautiful, and impressive for a hackathon demo!
