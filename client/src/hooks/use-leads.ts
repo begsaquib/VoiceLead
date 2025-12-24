@@ -1,17 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface ImportMetaEnv {
-  VITE_DIRECTUS_URL?: string;
-  VITE_DIRECTUS_TOKEN: string;
-  VITE_BOOTH_ID: string;
-}
-
-declare global {
-  interface ImportMeta {
-    readonly env: ImportMetaEnv;
-  }
-}
-
 // const DIRECTUS_URL = "https://b491837a4b1b.ngrok-free.app";
 // const BOOTH_ID = "67bbb618-a6ee-4ede-bd30-7e3d53eddfb6";
 // const DIRECTUS_TOKEN = "s4emciM7GGjVs-tOkSF3jCiOLZCL-hje";
@@ -20,6 +8,8 @@ const DIRECTUS_URL =
   import.meta.env.VITE_DIRECTUS_URL ?? "http://localhost:8055";
 const DIRECTUS_TOKEN = import.meta.env.VITE_DIRECTUS_TOKEN as string;
 const BOOTH_ID = import.meta.env.VITE_BOOTH_ID as string;
+const N8N_IMAGE_WEBHOOK_URL = import.meta.env.VITE_N8N_IMAGE_WEBHOOK_URL as string;
+const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL as string;
 
 export type Lead = {
   id: string;
@@ -44,8 +34,6 @@ export function useLeads() {
     queryFn: async () => {
       const url = `${DIRECTUS_URL}/items/leads?filter[booth_id][_eq]=${BOOTH_ID}&fields=*,date_created`;
 
-      console.log("🔍 Fetching:", url);
-
       const res = await fetch(url, {
         headers: {
           Authorization: `Bearer ${DIRECTUS_TOKEN}`,
@@ -53,16 +41,14 @@ export function useLeads() {
         },
       });
 
-      console.log("📡 Status:", res.status, res.ok, "bodyUsed:", res.bodyUsed);
+      console.log("📡 Status:", res.status, res.ok);
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       // 👈 SINGLE PARSE - logs raw response
       const rawText = await res.clone().text();
-      console.log("📄 Raw response:", rawText);
 
       const json: DirectusListResponse<Lead> = JSON.parse(rawText);
-      console.log("✅ Parsed leads:", json.data);
 
       return json.data;
     },

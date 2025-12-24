@@ -19,7 +19,7 @@ export function CaptureMethodModal({
     if (method === "voice") {
       navigate("/capture");
     } else {
-      navigate("/image-scan");
+      navigate("/scan");
     }
   };
 

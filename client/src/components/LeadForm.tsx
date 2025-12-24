@@ -14,13 +14,16 @@ import {
 
 declare global {
   interface ImportMetaEnv {
-    readonly VITE_N8N_WEBHOOK_URL: string;
-    readonly VITE_DIRECTUS_URL: string;
-    readonly VITE_DIRECTUS_TOKEN: string;
-    readonly VITE_BOOTH_ID: string;
+    readonly VITE_N8N_WEBHOOK_URL?: string;
+    readonly VITE_DIRECTUS_URL?: string;
+    readonly VITE_DIRECTUS_TOKEN?: string;
+    readonly VITE_BOOTH_ID?: string;
+    readonly VITE_N8N_IMAGE_WEBHOOK_URL?: string;
   }
 
-  
+  interface ImportMeta {
+    readonly env: ImportMetaEnv;
+  }
 }
 
 
@@ -38,8 +41,7 @@ type ExtractedLead = {
 };
 
 // 🔐 Read config from env (same values you used in use-leads.ts)
-const WEBHOOK_URL =
-  "https://flow.wecommit.ai/webhook/91337cef-2e74-4cb0-b970-1f6af5a8956d";
+const WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL as string;
 const DIRECTUS_URL =
   (import.meta.env.VITE_DIRECTUS_URL as string | undefined) ?? "http://localhost:8055";
 const DIRECTUS_TOKEN = import.meta.env.VITE_DIRECTUS_TOKEN as string | undefined;
@@ -208,7 +210,7 @@ export function LeadForm({ onSuccess, onCancel }: LeadFormProps) {
       }
 
       const data = await res.json();
-      console.log("Lead created:", data);
+      console.log("Lead created:");
 
       // NEW: Reset form to initial state instead of calling onSuccess()
       setExtractedData(null);

@@ -1,9 +1,22 @@
 import { useNavigate } from "react-router-dom";
 import { Header } from "../components/Header";
-import { ArrowLeft, Camera, Upload } from "lucide-react";
+import { BusinessCardScanner } from "../components/BusinessCardScanner";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { useState } from "react";
 
 export default function ImageScanPage() {
   const navigate = useNavigate();
+  const [showToast, setShowToast] = useState(false);
+
+  const handleSuccess = () => {
+    // Show success toast
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const handleCancel = () => {
+    navigate("/dashboard");
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -19,39 +32,33 @@ export default function ImageScanPage() {
         </button>
 
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-12 text-center">
-            <div className="mb-8 relative">
-              <div className="absolute inset-0 bg-purple-500/20 rounded-full blur-xl animate-pulse" />
-              <button className="relative w-32 h-32 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white shadow-xl shadow-purple-500/40 hover:scale-105 active:scale-95 transition-all mx-auto group">
-                <Camera className="w-12 h-12 group-hover:animate-bounce" />
-              </button>
-            </div>
-
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">
-              Business Card Scanner
-            </h2>
-            <p className="text-slate-500 mb-8 max-w-sm mx-auto">
-              Capture or upload a business card image. AI will extract contact
-              information automatically.
-            </p>
-
-            <div className="flex gap-4 justify-center">
-              <button className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold shadow-lg shadow-purple-600/30 hover:bg-purple-700 transition-all">
-                <Camera className="w-5 h-5" />
-                Take Photo
-              </button>
-              <button className="flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors">
-                <Upload className="w-5 h-5" />
-                Upload Image
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mt-8">
-              AI OCR Processing • Coming Soon
-            </p>
-          </div>
+          <BusinessCardScanner onSuccess={handleSuccess} onCancel={handleCancel} />
         </div>
       </main>
+
+      {/* Success Toast */}
+      {showToast && (
+        <div className="fixed bottom-6 right-6 bg-green-600 text-white px-6 py-4 rounded-xl shadow-xl flex items-center gap-3 animate-slide-up z-50">
+          <CheckCircle2 className="w-5 h-5" />
+          <span className="font-semibold">Lead saved successfully!</span>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slide-up {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

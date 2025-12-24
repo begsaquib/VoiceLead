@@ -25,7 +25,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="/" element={<LandingPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/capture" element={<VoiceCapturePage />} />
-          <Route path="/image-scan" element={<ImageScanPage />} />
+          <Route path="/scan" element={<ImageScanPage />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
