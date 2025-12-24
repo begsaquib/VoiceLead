@@ -13,8 +13,10 @@ import {
     RotateCcw,
     Sparkles,
     ImageIcon,
+    AlertCircle,
 } from "lucide-react";
 import { useImageExtract, fileToBase64 } from "../hooks/use-image-extract";
+import { useIsMobile } from "../hooks/use-mobile";
 
 type BusinessCardScannerProps = {
     onSuccess: () => void;
@@ -37,6 +39,8 @@ export function BusinessCardScanner({
     const [isProcessing, setIsProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isDragOver, setIsDragOver] = useState(false);
+    const [cameraPermissionDenied, setCameraPermissionDenied] = useState(false);
+    const [isStreamActive, setIsStreamActive] = useState(false);
 
     // AI-extracted data (original) + editable copy
     const [extractedData, setExtractedData] = useState<ExtractedLead | null>(null);
@@ -44,8 +48,12 @@ export function BusinessCardScanner({
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const cameraInputRef = useRef<HTMLInputElement>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
 
     const imageExtract = useImageExtract();
+    const isMobile = useIsMobile();
 
     // Config (same as LeadForm)
     const DIRECTUS_URL =
@@ -57,6 +65,74 @@ export function BusinessCardScanner({
     const BOOTH_ID =
         (import.meta.env.VITE_BOOTH_ID as string | undefined) ??
         "67bbb618-a6ee-4ede-bd30-7e3d53eddfb6";
+
+    // ------- Camera capture (Mobile) -------
+
+    const startCamera = async () => {
+        setCameraPermissionDenied(false);
+        setError(null);
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "environment" },
+                audio: false,
+            });
+
+            streamRef.current = stream;
+
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                setIsStreamActive(true);
+            }
+        } catch (err: any) {
+            if (err.name === "NotAllowedError") {
+                setCameraPermissionDenied(true);
+                setError("Camera permission denied. Please enable camera access in your device settings.");
+            } else if (err.name === "NotFoundError") {
+                setError("No camera found on this device");
+            } else {
+                setError("Failed to access camera. Please try again.");
+            }
+            console.error("Camera access error:", err);
+        }
+    };
+
+    const stopCamera = () => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach((track) => track.stop());
+            streamRef.current = null;
+        }
+        setIsStreamActive(false);
+    };
+
+    const capturePhoto = () => {
+        if (!videoRef.current || !canvasRef.current) return;
+
+        const context = canvasRef.current.getContext("2d");
+        if (!context) return;
+
+        // Set canvas dimensions to match video
+        canvasRef.current.width = videoRef.current.videoWidth;
+        canvasRef.current.height = videoRef.current.videoHeight;
+
+        // Draw video frame to canvas
+        context.drawImage(videoRef.current, 0, 0);
+
+        // Convert canvas to blob and process
+        canvasRef.current.toBlob(async (blob) => {
+            if (!blob) return;
+
+            const file = new File([blob], "camera-capture.jpg", { type: "image/jpeg" });
+
+            // Stop camera
+            stopCamera();
+
+            // Process the captured image
+            const previewUrl = URL.createObjectURL(blob);
+            setCapturedImage(previewUrl);
+            await processImage(file);
+        }, "image/jpeg", 0.9);
+    };
 
     // ------- Image handling -------
 
@@ -352,6 +428,59 @@ export function BusinessCardScanner({
         );
     }
 
+    // 3) Active camera stream (Mobile)
+    if (isStreamActive) {
+        return (
+            <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8 text-center">
+                <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                    Capture Business Card
+                </h2>
+                <p className="text-slate-500 mb-6">
+                    Position the business card clearly in view and tap capture
+                </p>
+
+                {/* Video Stream */}
+                <div className="relative mb-6 rounded-2xl overflow-hidden bg-black">
+                    <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        className="w-full h-96 object-cover"
+                    />
+                    {/* Canvas for capturing (hidden) */}
+                    <canvas ref={canvasRef} className="hidden" />
+                    
+                    {/* Focus guide overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-64 h-40 border-2 border-purple-500/50 rounded-2xl" />
+                    </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex gap-3 justify-center mb-4">
+                    <button
+                        onClick={capturePhoto}
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold shadow-lg shadow-purple-600/30 hover:shadow-xl transition-all"
+                    >
+                        <Camera className="w-5 h-5" />
+                        Capture Photo
+                    </button>
+                    <button
+                        onClick={stopCamera}
+                        className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                </div>
+
+                {/* Info */}
+                <p className="text-xs text-slate-400 mt-4">
+                    Make sure the business card is well-lit and fully visible
+                </p>
+            </div>
+        );
+    }
+
     // 3) Idle / Capture state
     return (
         <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-12 text-center">
@@ -361,6 +490,19 @@ export function BusinessCardScanner({
                     <div className="text-left">
                         <p className="text-sm font-semibold text-red-900">Error</p>
                         <p className="text-sm text-red-700">{error}</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Camera permission denied message */}
+            {cameraPermissionDenied && (
+                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-left flex-1">
+                        <p className="text-sm font-semibold text-yellow-900">Camera Access Required</p>
+                        <p className="text-sm text-yellow-700 mb-3">
+                            Please enable camera access in your device settings to use camera capture.
+                        </p>
                     </div>
                 </div>
             )}
@@ -377,68 +519,68 @@ export function BusinessCardScanner({
                 Scan Business Card
             </h2>
             <p className="text-slate-500 mb-8 max-w-sm mx-auto">
-                Take a photo or upload an image of a business card. AI will extract
-                contact details automatically.
+                {isMobile
+                    ? "Take a photo of a business card. AI will extract contact details automatically."
+                    : "Upload an image of a business card. AI will extract contact details automatically."}
             </p>
 
             {/* Action buttons */}
             <div className="flex gap-4 justify-center mb-8">
-                <button
-                    onClick={() => cameraInputRef.current?.click()}
-                    className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold shadow-lg shadow-purple-600/30 hover:bg-purple-700 hover:shadow-xl transition-all"
-                >
-                    <Camera className="w-5 h-5" />
-                    Take Photo
-                </button>
-                <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors"
-                >
-                    <Upload className="w-5 h-5" />
-                    Upload Image
-                </button>
+                {isMobile ? (
+                    <button
+                        onClick={startCamera}
+                        className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold shadow-lg shadow-purple-600/30 hover:bg-purple-700 hover:shadow-xl transition-all"
+                    >
+                        <Camera className="w-5 h-5" />
+                        Open Camera
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold shadow-lg shadow-purple-600/30 hover:bg-purple-700 hover:shadow-xl transition-all"
+                    >
+                        <Upload className="w-5 h-5" />
+                        Upload Image
+                    </button>
+                )}
             </div>
 
             {/* Hidden file inputs */}
-            <input
-                ref={cameraInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleInputChange}
-                className="hidden"
-            />
-            <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleInputChange}
-                className="hidden"
-            />
+            {!isMobile && (
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleInputChange}
+                    className="hidden"
+                />
+            )}
 
-            {/* Drag and drop zone */}
-            <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-2xl p-8 transition-all ${isDragOver
-                    ? "border-purple-500 bg-purple-50"
-                    : "border-slate-300 hover:border-slate-400"
+            {/* Drag and drop zone (Desktop only) */}
+            {!isMobile && (
+                <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`border-2 border-dashed rounded-2xl p-8 transition-all ${isDragOver
+                        ? "border-purple-500 bg-purple-50"
+                        : "border-slate-300 hover:border-slate-400"
                     }`}
-            >
-                <ImageIcon className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-                <p className="text-sm text-slate-500">
-                    {isDragOver ? (
-                        <span className="text-purple-600 font-semibold">
-                            Drop image here
-                        </span>
-                    ) : (
-                        <>
-                            Or drag and drop an image here
-                        </>
-                    )}
-                </p>
-            </div>
+                >
+                    <ImageIcon className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+                    <p className="text-sm text-slate-500">
+                        {isDragOver ? (
+                            <span className="text-purple-600 font-semibold">
+                                Drop image here
+                            </span>
+                        ) : (
+                            <>
+                                Or drag and drop an image here
+                            </>
+                        )}
+                    </p>
+                </div>
+            )}
 
             {/* AI badge */}
             <div className="mt-8 flex items-center justify-center gap-2 text-xs text-slate-400 font-medium uppercase tracking-wider">
