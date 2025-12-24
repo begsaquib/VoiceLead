@@ -1,39 +1,37 @@
+"use client";
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Header } from "../components/Header";
 import { LeadForm } from "../components/LeadForm";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 
+
 export default function VoiceCapturePage() {
-  const navigate = useNavigate();
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSuccess = () => {
-    // Show success message briefly
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000);
-
-    // DON'T navigate - stay on /capture
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-[#05070a] via-slate-950 to-[#0a0c10]">
+      {/* Animated background blobs */}
+      <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
+        <div className="absolute top-[10%] left-[5%] w-[500px] h-[500px] bg-indigo-600/20 blur-[150px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[10%] right-[5%] w-[600px] h-[600px] bg-purple-600/10 blur-[180px] rounded-full animate-pulse delay-700" />
+      </div>
+
       <Header />
 
-      <main className="max-w-5xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="font-medium">Back to Dashboard</span>
-          </button>
+      <main className="max-w-5xl mx-auto px-4 py-12 relative z-10">
+        <div className="flex items-center justify-between mb-8">
+          
 
           {showSuccess && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg text-green-700 animate-fadeIn">
-              <CheckCircle2 className="w-4 h-4" />
-              <span className="text-sm font-medium">
+            <div className="flex items-center gap-3 px-6 py-3 bg-emerald-950/40 border border-emerald-500/30 rounded-2xl text-emerald-300 animate-in fade-in slide-in-from-right-4 duration-300 backdrop-blur-sm">
+              <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+              <span className="font-bold uppercase tracking-wider text-sm">
                 Lead saved successfully!
               </span>
             </div>
@@ -43,7 +41,7 @@ export default function VoiceCapturePage() {
         <div className="max-w-2xl mx-auto">
           <LeadForm
             onSuccess={handleSuccess}
-            onCancel={() => navigate("/dashboard")}
+            onCancel={() => (window.location.href = "/dashboard")}
           />
         </div>
       </main>

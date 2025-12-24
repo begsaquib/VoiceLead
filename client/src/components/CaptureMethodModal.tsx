@@ -1,3 +1,5 @@
+"use client";
+
 import { useNavigate } from "react-router-dom";
 import { Mic, Camera, X } from "lucide-react";
 
