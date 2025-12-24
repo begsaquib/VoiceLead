@@ -1,31 +1,33 @@
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/not-found";
-import LandingPage from "@/pages/LandingPage";
-import AppPage from "@/pages/AppPage";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import LandingPage from "./pages/LandingPage";
+import DashboardPage from "./pages/dashboard";
+import VoiceCapturePage from "./pages/VoiceCapture";
+import ImageScanPage from "./pages/ImageScanPage";
+import "./index.css";
 
-function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={LandingPage} />
-      <Route path="/app" component={AppPage} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
-function App() {
-  return (
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/capture" element={<VoiceCapturePage />} />
+          <Route path="/image-scan" element={<ImageScanPage />} />
+        </Routes>
+      </BrowserRouter>
     </QueryClientProvider>
-  );
-}
-
-export default App;
+  </React.StrictMode>
+);

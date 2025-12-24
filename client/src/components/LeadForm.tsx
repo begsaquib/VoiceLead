@@ -177,6 +177,8 @@ export function LeadForm({ onSuccess, onCancel }: LeadFormProps) {
     setFormData((prev) => (prev ? { ...prev, [field]: value } : prev));
   };
 
+  // In handleSave function, REMOVE onSuccess() call:
+
   const handleSave = async () => {
     if (!formData) return;
 
@@ -208,6 +210,13 @@ export function LeadForm({ onSuccess, onCancel }: LeadFormProps) {
       const data = await res.json();
       console.log("Lead created:", data);
 
+      // NEW: Reset form to initial state instead of calling onSuccess()
+      setExtractedData(null);
+      setFormData(null);
+      setError(null);
+      setRecordingTime(0);
+
+      // Call onSuccess to show toast in parent
       onSuccess();
     } catch (error) {
       console.error("Error creating lead:", error);
